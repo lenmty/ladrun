@@ -242,10 +242,14 @@
   let assetsLoaded = false;
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
+  for (const eventName of ['contextmenu', 'selectstart', 'dragstart']) {
+    document.addEventListener(eventName, event => event.preventDefault());
+  }
   window.addEventListener('pointerdown', e => {
     const inGame = e.target instanceof Element && !!e.target.closest('.canvas-wrap');
     const onThemeButton = e.target instanceof Element && !!e.target.closest('#theme-toggle');
     const zone = e.target instanceof Element ? e.target.closest('.touch-zone') : null;
+    if (coarsePointer && !onThemeButton) e.preventDefault();
     if (state === 'ready') {
       const canStart = coarsePointer ? isTapOnCaleb(e) : inGame;
       if (canStart && assetsLoaded) { e.preventDefault(); startGame(); }
