@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f0e8">
+  <title>Caleb Runner</title>
+  <script>
+    const savedTheme = localStorage.getItem('caleb-runner-theme');
+    document.documentElement.dataset.theme = savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="hud" aria-label="Score">
+      <div class="brand">CALEB RUNNER</div>
+      <div class="scores"><span id="score-label">SCORE</span> <b id="score">00000</b><span id="best-label">BEST</span> <b id="best">00000</b></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Переключить тему">
+        <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 1.5v3M12 19.5v3M4.57 4.57l2.12 2.12m10.62 10.62 2.12 2.12M1.5 12h3m15 0h3M4.57 19.43l2.12-2.12M17.31 6.69l2.12-2.12"/></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.2A8.7 8.7 0 0 1 8.8 3.8 8.8 8.8 0 1 0 20.2 15.2Z"/></svg>
+      </button>
+    </header>
+    <div class="canvas-wrap">
+      <canvas id="game" width="960" height="320" aria-label="Caleb Runner game"></canvas>
+      <div id="message" class="message" aria-live="polite">
+        <strong id="message-title">Caleb Runner</strong>
+        <span id="message-help">Нажмите Space, чтобы начать</span>
+      </div>
+    </div>
+    <footer id="controls">Space / ↑ / W — прыжок <span>·</span> ↓ / S — пригнуться</footer>
+  </main>
+  <div class="mobile-controls" aria-label="Игровое управление">
+    <button id="jump-zone" class="touch-zone" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15 12 8 19 15"/></svg>
+    </button>
+    <button id="duck-zone" class="touch-zone" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg>
+    </button>
+  </div>
+  <script src="sprite-config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

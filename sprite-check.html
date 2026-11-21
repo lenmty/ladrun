@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проверка спрайтов</title>
+  <style>
+    :root { color-scheme: light dark; font: 16px/1.45 system-ui, sans-serif; }
+    body { margin: 0; padding: 24px; background: Canvas; color: CanvasText; }
+    h1, h2 { line-height: 1.15; }
+    h1 { margin: 0 0 8px; } h2 { margin: 32px 0 12px; }
+    .intro { max-width: 75ch; opacity: .8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px; }
+    .card { min-width: 0; border: 1px solid color-mix(in srgb, CanvasText 22%, transparent); border-radius: 8px; padding: 12px; }
+    .card h3 { font-size: 15px; margin: 0 0 3px; }
+    .meta { font-size: 12px; opacity: .7; margin-bottom: 10px; }
+    .previews { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .preview { min-width: 0; overflow: visible; min-height: 340px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .preview.light { background: #e8e8e8; }
+    .preview.dark { background: #252525; }
+    .stage { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+    canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .hitbox { position: absolute; box-sizing: border-box; border: 2px solid #ff3158; pointer-events: none; }
+    .anchor { position: absolute; width: 9px; height: 9px; margin: -4px 0 0 -4px; border: 2px solid #13a7ff; border-radius: 50%; background: #fff; pointer-events: none; }
+    .ground { position: absolute; left: -8px; right: -8px; border-top: 1px dashed #13a7ff; pointer-events: none; }
+    .legend { font-size: 12px; margin-top: 10px; opacity: .8; }
+    .swatch { display: inline-block; width: 12px; height: 12px; border: 2px solid #ff3158; vertical-align: -3px; }
+    .dot { display: inline-block; width: 9px; height: 9px; border: 2px solid #13a7ff; border-radius: 50%; vertical-align: -3px; margin: 0 3px; }
+    .error { color: #c00; padding: 16px; }
+    @media (max-width: 600px) { body { padding: 14px; } .grid { grid-template-columns: 1fr; } .preview { min-height: 160px; } }
+  </style>
+</head>
+<body>
+  <h1>Проверка извлечения спрайтов</h1>
+  <p class="intro">Кадры извлекаются непосредственно из исходных PNG. Каждый показан на светлом и тёмном нейтральном фоне; исходное соотношение сторон сохранено, сглаживание выключено. Красный контур — черновая область коллизии, голубая отметка — точка привязки. Для Crash коллизии отключены.</p>
+  <div class="legend"><span class="swatch"></span> hitbox &nbsp; <span class="dot"></span> anchor / линия земли &nbsp; Crash: hitbox отсутствует</div>
+  <main id="content"></main>
+  <script>
+    // Rectangles are explicit source-pixel coordinates: [x, y, width, height].
+    // Caleb's isolated sheet artifacts are excluded from the character crops.
+    const caleb = [
+      { name: 'Caleb — Idle', state: 'Idle · исходная поза', image: 'Caleb.png', rect: [52, 210, 233, 402], anchor: 'ground', hit: [0.14, 0.04, 0.76, 0.94] },
+      { name: 'Caleb — Run 1', state: 'Run · кадр 1', image: 'Caleb.png', rect: [359, 222, 240, 390], anchor: 'ground', hit: [0.13, 0.05, 0.78, 0.92] },
+      { name: 'Caleb — Run 2', state: 'Run · кадр 2', image: 'Caleb.png', rect: [665, 235, 239, 378], anchor: 'ground', hit: [0.13, 0.06, 0.78, 0.91] },
+      { name: 'Caleb — Jump', state: 'Jump · airborne', image: 'Caleb.png', rect: [951, 158, 260, 345], anchor: 'air', hit: [0.10, 0.06, 0.82, 0.88] },
+      { name: 'Caleb — Duck 1', state: 'Duck · кадр 1', image: 'Caleb.png', rect: [1230, 302, 265, 310], anchor: 'ground', hit: [0.08, 0.10, 0.86, 0.86] },
+      { name: 'Caleb — Duck 2', state: 'Duck · кадр 2', image: 'Caleb.png', rect: [1520, 332, 261, 280], anchor: 'ground', hit: [0.08, 0.10, 0.86, 0.86] },
+      { name: 'Caleb — Crash', state: 'Crash · падение · коллизии отключены', image: 'Caleb.png', rect: [1815, 430, 315, 185], anchor: 'ground', hit: null },
+    ];
+    const wanderers = [
+      ['Basalt', 'маленький наземный', [63,106,249,220], [374,104,277,220], 'ground', [0.08,0.14,0.84,0.80]],
+      ['Patrol', 'маленький наземный', [721,143,321,206], [1085,139,314,210], 'ground', [0.06,0.16,0.88,0.78]],
+      ['Charybdis Rex', 'большой наземный', [1452,34,340,315], [1815,62,336,287], 'ground', [0.05,0.12,0.90,0.84]],
+      ['Petro Golem', 'большой наземный', [28,405,313,269], [374,425,310,249], 'ground', [0.06,0.10,0.88,0.86]],
+      ['Galewings', 'воздушный', [744,370,292,325], [1093,447,321,248], 'air', [0.05,0.10,0.90,0.82]],
+      ['Spurtail', 'воздушный', [1467,404,313,256], [1827,425,313,249], 'air', [0.05,0.10,0.90,0.82]],
+    ].flatMap(([species, category, a, b, anchor, hit]) => [a,b].map((rect, i) => ({
+      name: `${species} — кадр ${i+1}`, state: `${species} · ${category} · анимация ${i+1}/2`, image: 'Wanderers.png', rect, anchor, hit
+    })));
+
+    function addSection(title, sprites) {
+      const section = document.createElement('section');
+      const heading = document.createElement('h2'); heading.textContent = title; section.append(heading);
+      const grid = document.createElement('div'); grid.className = 'grid';
+      for (const s of sprites) {
+        const card = document.createElement('article'); card.className = 'card';
+        const h = document.createElement('h3'); h.textContent = s.name;
+        const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${s.state} · crop ${s.rect.join(', ')}`;
+        const previews = document.createElement('div'); previews.className = 'previews';
+        for (const theme of ['light','dark']) {
+          const preview = document.createElement('div'); preview.className = `preview ${theme}`; preview.title = theme === 'light' ? 'Светлый фон' : 'Тёмный фон';
+          const stage = document.createElement('div'); stage.className = 'stage';
+          const canvas = document.createElement('canvas');
+          const [sx,sy,sw,sh] = s.rect; const scale = 2;
+          canvas.width = sw * scale; canvas.height = sh * scale;
+          // CSS controls width only; the intrinsic canvas ratio determines height.
+          stage.style.width = `${sw * scale}px`;
+          canvas.dataset.sourceRatio = `${sw}/${sh}`;
+          canvas.dataset.displayRatio = `${canvas.width}/${canvas.height}`;
+          const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false;
+          const img = new Image(); img.src = s.image;
+          img.onload = () => ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+          img.onerror = () => { const e = document.createElement('div'); e.className='error'; e.textContent=`Не удалось загрузить ${s.image}`; preview.append(e); };
+          stage.append(canvas);
+          if (s.hit) {
+            const [hx,hy,hw,hh] = s.hit; const box = document.createElement('i'); box.className='hitbox';
+            box.style.left=`${hx*100}%`; box.style.top=`${hy*100}%`; box.style.width=`${hw*100}%`; box.style.height=`${hh*100}%`; stage.append(box);
+          }
+          const anchor = document.createElement('i'); anchor.className='anchor'; anchor.style.left='50%';
+          if (s.anchor === 'ground') { anchor.style.top='100%'; stage.append(anchor); const line=document.createElement('i'); line.className='ground'; line.style.top='100%'; stage.append(line); }
+          else { anchor.style.top='50%'; stage.append(anchor); }
+          preview.append(stage); previews.append(preview);
+        }
+        card.append(h,meta,previews); grid.append(card);
+      }
+      section.append(grid); document.querySelector('#content').append(section);
+    }
+    addSection('Калеб · 7 состояний', caleb);
+    addSection('Странники · 12 кадров', wanderers);
+  </script>
+</body>
+</html>

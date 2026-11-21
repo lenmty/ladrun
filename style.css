@@ -1,0 +1,48 @@
+:root {
+  color-scheme: light;
+  --paper: #f2f0e8;
+  --ink: #252525;
+  --line: #454545;
+  --muted: #77756e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #20211f;
+  --ink: #eeeae0;
+  --line: #cfcbc1;
+  --muted: #aaa69c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 18px; background: var(--paper); color: var(--ink); }
+.game-shell { width: min(100%, 1000px); }
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 0 8px 12px; font-size: 14px; letter-spacing: .08em; }
+.brand { font-weight: 800; }
+.theme-toggle { display: grid; flex: 0 0 32px; place-items: center; width: 32px; height: 32px; margin-left: 4px; padding: 5px; border: 0; border-radius: 0; color: var(--ink); background: transparent; cursor: pointer; }
+.theme-toggle:hover { opacity: .68; }
+.theme-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.theme-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+:root[data-theme="light"] .sun-icon, :root[data-theme="dark"] .moon-icon { display: none; }
+.scores { display: flex; gap: 9px; align-items: baseline; margin-left: auto; white-space: nowrap; font-size: 12px; color: var(--muted); }
+.scores b { min-width: 5ch; color: var(--ink); font-size: 15px; }
+.canvas-wrap { position: relative; overflow: hidden; border-bottom: 2px solid var(--line); }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 3 / 1; image-rendering: pixelated; image-rendering: crisp-edges; }
+.message { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; text-align: center; pointer-events: none; color: var(--ink); }
+.message strong { font-size: clamp(18px, 3vw, 25px); letter-spacing: .08em; }
+.message span { padding: 5px 9px; background: var(--paper); font-size: clamp(11px, 2vw, 14px); }
+.message.hidden { display: none; }
+#controls { padding: 11px 8px 0; color: var(--muted); font-size: 12px; text-align: center; }
+#controls span { padding: 0 8px; }
+@media (max-width: 520px) { body { padding: 12px 8px; } .hud { font-size: 11px; gap: 6px; } .theme-toggle { flex-basis: 28px; width: 28px; height: 30px; margin-left: 0; padding: 4px; } .scores { gap: 5px; font-size: 10px; } .scores b { font-size: 12px; } #controls { font-size: 10px; } }
+.mobile-controls { display: none; }
+@media (pointer: coarse) {
+  html, body { width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: none; }
+  body { position: fixed; inset: 0; min-height: 100%; user-select: none; -webkit-user-select: none; }
+  .game-shell { position: fixed; z-index: 1; left: 50%; bottom: 50vh; width: calc(100% - 16px); transform: translateX(-50%); }
+  canvas { transform: scale(1.20); transform-origin: left center; }
+  .canvas-wrap { border-bottom: 0; }
+  #controls { display: none; }
+  .mobile-controls { position: fixed; z-index: 2; inset: 50vh 0 0; display: grid; grid-template-rows: 1fr 1fr; padding-bottom: env(safe-area-inset-bottom); touch-action: none; }
+  .touch-zone { display: grid; place-items: center; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; color: var(--muted); background: transparent; -webkit-tap-highlight-color: transparent; touch-action: none; }
+  .touch-zone svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+}
